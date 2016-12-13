@@ -4,6 +4,9 @@
    
     <link rel="stylesheet" type="text/css" href="main2.css">
      <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script> 
+
+<script type="text/javascript" src="http://cdn.robotwebtools.org/EventEmitter2/current/eventemitter2.min.js"></script> 
+
      <script type="text/javascript" src="http://cdn.robotwebtools.org/roslibjs/current/roslib.min.js"></script>
     <script src="main.js" ></script>
   <!--?q=1280549780-->
@@ -18,6 +21,15 @@
         <div id="small_msg">
         </div>
         </div>
+      <!-- Register Person Form -->
+        <div id="set_up">
+          <form id="person_setup">
+            <input type="text" name="person" ></br>
+            
+          </form>
+<button id="submit_name">Register Person</button>
+       <div id="new_people"></div>
+ </div>
       <!-- Big message only-->
         
         <div id="big_msg">
@@ -43,9 +55,9 @@
     <div class="menu">
       <div class="overlay"></div>
       <div class="underlay"></div>
-      <span>LIVE</span>
+      <span id="home_link">LIVE</span>
       <div id="separator"></div>
-      <a href="set_up.html"><span>SET UP</span></a>
+      <span id="set_up_link">SET UP</span>
     </div>
 
   </body>

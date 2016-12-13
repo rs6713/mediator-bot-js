@@ -6,6 +6,41 @@ html, body{
   margin:0;
   padding:0;
 }
+form {
+  width:100%;
+ 
+  display:inline-block;
+  padding:2em;
+  box-sizing:border-box;
+  }
+input{
+  width:60%;
+  height:4em;
+  
+}
+#new_people{
+  width:40%;
+  height:4em;
+  color:green;
+  display:inline-block;
+}
+#submit_name{
+  width:40%;
+  height:4em;
+  display:inline-block;
+  border-radius:20px;
+}
+#set_up{
+  text-align:center;
+  width:100%;
+  height:100%;
+  visibility:hidden;
+  position:absolute;
+  z-index:4;
+}
+
+
+
 .menu span{
   margin-top:0%;
   width:49.5%;
@@ -70,7 +105,7 @@ html, body{
   width:100%;
   display:block;
   overflow:hidden;
-  visibility:hidden;
+
 }
 #small_msg{
   height:20%;
@@ -82,7 +117,7 @@ html, body{
   font-size:2em;
   padding-top:1em;
   box-sizing:border-box;
-  visibility:hidden;
+
 }
 
 #big_msg{
@@ -122,6 +157,7 @@ html, body{
   width:100%;
   height:100%;
   z-index:0;
+  visibility:hidden;
 }
 #bar_graph div{
   height:15%;

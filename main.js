@@ -4,12 +4,14 @@ var FACE=0;
 var MESSAGE=1;
 var BAR=2;
 var PIE=3;
+var SET_UP=4;
+var TEST_MODE=2;
 
 function user_interface(){
   var main=this;
   this.robot_mode=POLITE; //rude or polite
   this.gui_mode="all"; //varying level of display reaction to inputs
-  this.test_mode=0; //0- face, 1- sentences, 2- bargraph, 3- pie
+  this.test_mode=2; //0- face, 1- sentences, 2- bargraph, 3- pie
   this.people=[{person:"samamtha", percent: 30,x:5,y:5},{person:"richard", percent: 70,x:5,y:5}];
   this.robot=["Robot",0,0];
   this.mikes=[(20,30), (10,10)];   
@@ -23,12 +25,13 @@ function user_interface(){
   this.actions={none: ["", ""], 
                 speaking_over: ["Please don't speak over eachother", "don't speak over, let everyone get a chance"],
                 too_loud: ["Please speak more softly"," don't speak so loud"] ,
-                dominated: ["Please let everyone get an even say"," don't dominate the conversation"]
+                dominated: ["Please let everyone get an even say"," don't dominate the conversation"],
+		too_quiet: ["Please speak a little louder", " come on speak up!"]
   };
   this.demo = function (){
     this.robot_mode=POLITE;
     this.gui_mode="all";
-    this.test_mode=2;
+    this.test_mode=0;
     this.people=[("samamtha", 0,5,5),("richard", 0,5,5)]; //person, percentage spoken, x, y
     this.robot=["Robot",0,0];
     this.mikes=[];   
@@ -104,7 +107,7 @@ var create_bargraph=function(){
 
 //action topic is: action_type, mood, person involved
 var set_action=function(action, mood, person){
-  ui.current_action=action;
+  ui.current_action=action.toLowerCase();
   ui.current_person=person;
   //ui.current_face=mood;
   if(ui.robot_mode==POLITE){
@@ -129,8 +132,9 @@ var set_message=function(message){
 };
 
 var set_test_mode=function(test_mode){
-  var test_array=["#container","#big_msg", "#bar_graph", "#pie_graph"];
-  
+  var test_array=["#container","#big_msg", "#bar_graph", "#pie_graph", "#set_up"];
+   if(test_mode==SET_UP && ui.test_mode!=SET_UP){TEST_MODE=ui.test_mode;}
+   //if(ui.test_mode==SET_UP && test_mode!=SET_UP
     var current_test_mode=test_array[ui.test_mode];
     $(current_test_mode).css( "visibility", "hidden");
   
@@ -155,6 +159,9 @@ var set_test_mode=function(test_mode){
     case 3:
       //$("#pie_graph").css( "visibility", visible );
       break;
+    case 4:
+      
+      break;
     default:
       break;
   }
@@ -163,7 +170,7 @@ var set_test_mode=function(test_mode){
 
 var set_face_mode=function(face){
   //var currentface="#face_"+ui.current_face;
-  var new_face="../static/assets/"+face+"_face.png";
+  var new_face="assets/"+face+"_face.png";
   $("#face img").attr("src", new_face);
  // $(currentface).css( "visibility", "hidden" );
   //var newface="#face_"+face;
@@ -204,9 +211,48 @@ var set_face_mode=function(face){
 
 $(document).ready(function(){
   //demo
- set_test_mode(BAR); 
+  //$("#set_up").css("visibility", "hidden");
+  set_test_mode(BAR); 
   //set_action("too_loud","happy", "Bob");
+$("#set_up_link").click(function(){
+  //alert("sup");
+  set_test_mode(SET_UP);
+});
+$("#home_link").click(function(){
+  var request=new ROSLIB.ServiceRequest({
+  });
+  endEnrollment.callService(request,function(result){
+    startRecognition.callService(request, function(result){
+      set_test_mode(TEST_MODE);
+    });    
+  });
+  //set_test_mode(TEST_MODE);
+});
+/*
+$("#submit_name").click(function(){
+  console.log("sup");
+  var inputs=$('#person_setup :input').val();
+  var register_person=new ROSLIB.Message({
+    Person: inputs,
+    Success:true
+  });
+  person_setup.publish(register_person);
+  $('#person_setup :input').val('');
+});
+*/
+$('#submit_name').click(function(){
 
+  var inputs=$('#person_setup :input').val();
+  var request=new ROSLIB.ServiceRequest({
+    name:inputs
+  });
+  registerPerson.callService(request, function(result){
+    if(result.success){
+      ui.people.push({person:inputs,percent: 0,x:0,y:0});
+      $('#new_people').append(inputs);
+    }
+  });
+});
 
 
 
@@ -229,32 +275,98 @@ ros.on('error', function(error) {
 ros.on('close', function() {
   console.log('Connection to websocket server closed.');
 });
+//Service
+var registerPerson= new ROSLIB.Service({
+  ros : ros,
+  name : '/StartEnrollment',
+  serviceType: 'beginner_tutorials/StartEnrollment'
+});
+var startRecognition= new ROSLIB.Service({
+  ros: ros,
+  name: '/StartRecognition',
+  messageType:'beginner_tutorials/StartRecognition'
+});
+var endEnrollment= new ROSLIB.Service({
+  ros : ros,
+  name: '/EndEnrollment',
+  serviceType: 'beginner_tutorials/EndEnrollment'
+});
 
 //Subscribing to a topic
 //----------
 var action_listener= new ROSLIB.Topic({
   ros:ros,
   name:'/Action',
-  messageType:'Action'
+  messageType:'beginner_tutorials/Action'
 });
 
-listener.subscribe(function(message){
+var percent_listener=new ROSLIB.Topic({
+  ros:ros,
+  name:'/Percentage',
+  messageType:'beginner_tutorials/Percentage'
+});
+var register_listener=new ROSLIB.Topic({
+  ros:ros,
+  name:'/Registration_complete',
+  messageType:'beginner_tutorials/Registration_Complete'
+});
+var transcript_listener=new ROSLIB.Topic({
+  ros:ros,
+  name:'/Transcript',
+  messageType:'beginner_tutorials/Transcript'
+});
+
+action_listener.subscribe(function(message){
+  //alert("hello");
   console.log(message.Person + message.Action + message.Mood);
-  listener.unsubscribe();
+  //alert("hello world");
+  set_action(message.Action, message.Mood.toLowerCase(), message.Person);
+//  action_listener.unsubscribe();
 });
-
+percent_listener.subscribe(function(message){
+  console.log(message.Person + message.Percentage);
+  for(var i=0; i<ui.people.length; i++){
+    if(ui.people[i]["person"]==message.Person){
+      ui.people[i]["percent"]=message.Percentage;
+      create_bargraph();
+      //break;  
+    }
+  }
+});
+register_listener.subscribe(function(message){
+  console.log(message.label + message.success);
+  if(message.success){
+    var index=ui.people.length;
+    ui.people[index]={person: message.label,percent:  0, x:0, y:0};
+  }
+});
 //Publishing a topic
 //------------------------------------------
 var person_setup=new ROSLIB.Topic({
   ros: ros,
   name: '/Register_Person',
-  messageType: 'Person'
+  messageType: 'beginner_tutorials/Person_Register'
 });
 
+/*
 var register_person= new ROSLIB.Message({
-  Person: "Sam"
+  Person: "Sam",
+  Success: true
 });
-person_setup.publish(register_person);
+*/
+/*
+$("#submit_name").click(function(){
+  console.log("sup");
+  var inputs=$('#person_setup :input').val();
+  var register_person=new ROSLIB.Message({
+    Person: inputs,
+    Success:true
+  });
+  person_setup.publish(register_person);
+  $('#person_setup :input').val('');
+
+});
+*/
 /*
     def quiet_down(self):
         if (self.robot_mode != "polite"):
